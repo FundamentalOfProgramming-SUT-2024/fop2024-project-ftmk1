@@ -4,6 +4,88 @@
 #include <ctype.h>
 
 #define filefornames "users.txt" 
+#define wall '|'
+#define floor '.'
+#define door '+'
+#define corridor '#'
+#define pillar 'O'
+#define window '='
+
+char map[25][50];
+void initialize_map() {
+    for (int i = 0; i < 25; i++) {
+        for (int j = 0; j < 50; j++) {
+            if ( j == 0 || j == 49) {
+                map[i][j] = wall;
+            }else if(i == 0 || i == 24){
+                map[i][j] = '_';
+            } else {
+                map[i][j] = floor; 
+            }
+        }
+    }
+}
+void display_map() {
+    for (int i = 0; i < 25; i++) {
+        for (int j = 0; j < 50; j++) {
+            mvprintw(i, j, "%c", map[i][j]);
+        }
+    }
+    refresh(); 
+}
+void room_wall() {
+    for(int i = 2 ; i<=5; i++){
+        map[4][i] = '_'; 
+        map[1][i] = '_';
+    }
+    for (int i = 2; i<=3; i++){
+        map[i][6] = '|';
+        map[i][1] = '|';
+    }
+    for(int i =7; i<=8; i++){
+        map[i][9] = '|';
+        map[i][5] = '|';
+    }
+    for(int i=6; i<=9; i++){
+         map[6][i] = '_';
+         map[9][i] = '_';
+    }
+    for(int i=7; i<=8; i++){
+        map[i][14] = '|';
+        map[i][19] = '|';
+    }
+    for(int i=15; i<=18; i++){
+        map[6][i] = '_';
+        map[9][i] = '_';
+    }
+}
+void doors() {
+    map[8][10] = door;  
+    map[8][13] = door;  
+    map[2][7] = door;
+    map[5][17] = door;
+}
+void corridors() {
+        map[8][11] = corridor;
+        map[8][12] = corridor;
+        map[8][11] = corridor;
+        for (int i=5 ; i>=3; i--){
+            map[i][7] = corridor;
+        }
+        for(int i=8 ; i<=17 ; i++){
+            map[4][i] = corridor;
+        }
+}
+void pillars() {
+    map[8][18] = pillar; 
+    map[7][6] = pillar; 
+    map[3][3] = pillar; 
+}
+void windows() {
+    map[8][4] = window; 
+    map[8][4] = window; 
+    map[5][3] = window; 
+}
 
 int game_difficulty;
 char hero_color[20];
@@ -47,8 +129,9 @@ int e_mail(char *email) {
     if (atsign == NULL)
         return 0;
     char *dot = strchr(email, '.');
-    if (dot == NULL)
+    if (dot == NULL){
         return 0;
+    }
     return 1;
 }
 
@@ -76,43 +159,38 @@ int login(char *username, char *password) {
     fclose(file);
     return 0;
 }
+char game_message[1000];
 
-void pre_game_menu() {
-    int choice;
-    initscr();
+void display_message(const char* message) {
     clear();
-    noecho();
-    cbreak();
-    printw("Pre-game Menu:\n");
-    printw("1. Start New Game\n");
-    printw("2. Continue Previous Game\n");
-    printw("3. Scoreboard\n");
-    printw("4. Settings\n");
-    printw("5. Profile Menu\n");
-    printw("Choose an option: ");
-    scanw("%d", &choice);
-    if(choice == 1) {
-        printw("Starting new game...\n");
-    }
-    else if(choice == 2) {
-        printw("Continuing previous game...\n");
-    }
-    else if(choice == 3) {
-        printw("Displaying scoreboard...\n");
-    }
-    else if(choice == 4) {
-        printw("Settings menu...\n");
-    }
-    else if(choice == 5) {
-        printw("Profile menu...\n");
-    }
-    else {
-        printw("Invalid option.\n");
-    }
-    getch();
-    endwin();
+    mvprintw(0, 0, "Game Messages:"); 
+    mvprintw(1, 0, message);
+    refresh();
 }
 
+void game_action() {
+    strcpy(game_message, "You hit the enemy!");
+    display_message(game_message);
+    getch();
+}
+
+void game_hit() {
+    strcpy(game_message, "You were hit by the enemy!");
+    display_message(game_message);
+    getch();
+}
+
+void weapon_pickup() {
+    strcpy(game_message, "You picked up a new weapon!");
+    display_message(game_message);
+    getch(); 
+}
+
+void shooting() {
+    strcpy(game_message, "You shot the weapon!");
+    display_message(game_message);
+    getch(); 
+}
 void settings_menu() {
     int choice;
     clear();
@@ -121,7 +199,8 @@ void settings_menu() {
     printw("2. Change Hero Color\n");
     printw("3. Back to Main Menu\n");
     printw("Enter your choice: ");
-    scanw("%d", &choice);
+    refresh();
+    choice = getch() - '0';
 
     switch (choice) {
         case 1: {
@@ -165,6 +244,50 @@ void settings_menu() {
     }
     getch();
 }
+void pre_game_menu() {
+    int choice;
+    initscr();
+    clear();
+    noecho();
+    cbreak();
+    printw("Pre-game Menu:\n");
+    printw("1. Start New Game\n");
+    printw("2. Continue Previous Game\n");
+    printw("3. Scoreboard\n");
+    printw("4. Settings\n");
+    printw("5. Profile Menu\n");
+    printw("Choose an option: ");
+    refresh();
+    choice = getch() - '0';
+    if(choice == 1) {
+        printw("Starting new game...\n");
+        clear();
+        initialize_map();  
+        doors();
+        room_wall();
+        corridors(); 
+        pillars();   
+        windows();   
+        display_map(); 
+    }
+    else if(choice == 2) {
+        printw("Continuing previous game...\n");
+    }
+    else if(choice == 3) {
+        printw("Displaying scoreboard...\n");
+    }
+    else if(choice == 4) {
+        settings_menu();
+    }
+    else if(choice == 5) {
+        printw("Profile menu...\n");
+    }
+    else {
+        printw("Invalid option.\n");
+    }
+    getch();
+    endwin();
+}
 
 int main(){
     char username[1000], password[1000], email[1000];
@@ -180,9 +303,11 @@ int main(){
     printw("4. Settings\n");
     printw("5. Exit\n");
     printw("Choose an option: ");
-    scanw("%d ", &choice);
+    refresh();
+    choice = getch()- '0';
 
     if(choice == 1) {
+        clear();
         printw("Enter username: ");
         echo();
         scanw("%s", username); 
@@ -192,8 +317,7 @@ int main(){
         echo();
         scanw("%s", password);
         noecho();
-
-        if (login(username, password)) {
+        if (login(username, password)!=1) {
             printw("Login successful! Welcome %s.\n", username);
             pre_game_menu();
         } else {
@@ -203,6 +327,7 @@ int main(){
         printw("Logged in as guest! Welcome, %s.\n", guest);
         pre_game_menu();
     } else if (choice == 3) {
+        clear();
         printw("Enter username: ");
         echo();
         scanw("%s", username);
@@ -246,8 +371,7 @@ int main(){
     } else if (choice == 4) {
         settings_menu();
     } else if (choice == 5) {
-        printw("Exiting...\n");
-        getch();
+        clear();
         endwin();
         return 0;
     } else {
